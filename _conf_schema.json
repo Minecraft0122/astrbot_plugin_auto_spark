@@ -4,28 +4,40 @@
     "type": "bool",
     "default": true
   },
-  "message": {
-    "description": "发送的续火消息",
+  "platform_id": {
+    "description": "平台实例 ID",
     "type": "string",
-    "default": "续火啦 🔥"
+    "default": "",
+    "hint": "例如 qq；填写后群聊和私聊列表可直接填写群号或用户 QQ"
   },
   "group_targets": {
     "description": "群聊列表",
-    "type": "string",
-    "default": "",
-    "hint": "每行一个 UMO，例如 qq:GroupMessage:123456"
+    "type": "list",
+    "items": {
+      "type": "string"
+    },
+    "default": [],
+    "hint": "填写群号；也支持完整 UMO，例如 qq:GroupMessage:123456"
   },
   "private_targets": {
     "description": "私聊列表",
-    "type": "string",
-    "default": "",
-    "hint": "每行一个 UMO，例如 qq:FriendMessage:987654"
+    "type": "list",
+    "items": {
+      "type": "string"
+    },
+    "default": [],
+    "hint": "填写用户 QQ；也支持完整 UMO，例如 qq:FriendMessage:987654"
   },
   "send_time": {
     "description": "每天发送时间",
     "type": "string",
     "default": "09:00",
     "hint": "只填写一个 HH:MM 时间，每天发送一次"
+  },
+  "message": {
+    "description": "发送的续火消息",
+    "type": "string",
+    "default": "续火啦 🔥"
   },
   "admin_only": {
     "description": "仅管理员可使用续火命令",

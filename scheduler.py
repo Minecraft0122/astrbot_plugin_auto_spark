@@ -7,12 +7,11 @@ from typing import Awaitable, Callable
 
 
 class SparkScheduler:
-    def __init__(self, send_group: Callable[[str, str], Awaitable[bool]], send_private: Callable[[str, str], Awaitable[bool]], message: str, send_time: str = "09:00", send_on_startup: bool = False, target_provider: Callable[[], tuple[list[str], list[str]]] | None = None):
+    def __init__(self, send_group: Callable[[str, str], Awaitable[bool]], send_private: Callable[[str, str], Awaitable[bool]], message: str, send_time: str = "09:00", target_provider: Callable[[], tuple[list[str], list[str]]] | None = None):
         self._send_group = send_group
         self._send_private = send_private
         self.message = message
         self.send_time = self._normalize_time(send_time) or "09:00"
-        self.send_on_startup = send_on_startup
         self._target_provider = target_provider
         self._task: asyncio.Task | None = None
         self._stopping = False
@@ -44,8 +43,6 @@ class SparkScheduler:
         return max(0.5, (candidate - now).total_seconds())
 
     async def _run(self) -> None:
-        if self.send_on_startup:
-            await self.send_once()
         try:
             while not self._stopping:
                 await asyncio.sleep(self._delay_to_next_time())

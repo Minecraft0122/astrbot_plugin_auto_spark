@@ -12,6 +12,7 @@ except ImportError:
     AstrBotConfig = dict  # type: ignore
 from astrbot.core.platform.message_session import MessageSession
 from astrbot.core.platform.message_type import MessageType
+from astrbot.core.platform.message_type import MessageType
 try:
     from astrbot.api.star import StarTools
 except ImportError:
@@ -34,8 +35,9 @@ class AutoSparkPlugin(Star):
             try: self._state_file = Path(StarTools.get_data_dir("astrbot_plugin_auto_spark")) / "targets.json"
             except Exception: self._state_file = Path("data/plugin_data/astrbot_plugin_auto_spark/targets.json")
         else: self._state_file = Path("data/plugin_data/astrbot_plugin_auto_spark/targets.json")
-        self.group_targets = self._parse_targets(cfg.get("group_targets", ""), "GroupMessage")
-        self.private_targets = self._parse_targets(cfg.get("private_targets", ""), "FriendMessage")
+        self.platform_id = str(cfg.get("platform_id", "")).strip()
+        self.group_targets = self._parse_targets(cfg.get("group_targets", []), "GroupMessage", self.platform_id)
+        self.private_targets = self._parse_targets(cfg.get("private_targets", []), "FriendMessage", self.platform_id)
         self._load_targets()
         self.scheduler = SparkScheduler(self._send_group, self._send_private, self.message, self.send_time, target_provider=lambda: (self.group_targets, self.private_targets))
 
@@ -47,12 +49,16 @@ class AutoSparkPlugin(Star):
         except (TypeError, ValueError): return None
 
     @staticmethod
-    def _parse_targets(raw: Any, expected_type: str) -> list[str]:
+    def _parse_targets(raw: Any, expected_type: str, platform_id: str = "") -> list[str]:
         vals = raw if isinstance(raw, (list, tuple, set)) else str(raw or "").replace("，", "\n").replace(",", "\n").splitlines()
         result = []
         for value in vals:
-            umo = str(value).strip()
-            if not umo: continue
+            value = str(value).strip()
+            if not value: continue
+            umo = value
+            if ":" not in value and platform_id:
+                message_type = MessageType.GROUP_MESSAGE if expected_type == "GroupMessage" else MessageType.FRIEND_MESSAGE
+                umo = str(MessageSession(platform_id, message_type, value))
             try:
                 session = MessageSession.from_str(umo)
                 if session.message_type.value != expected_type: raise ValueError("wrong message type")
@@ -75,8 +81,8 @@ class AutoSparkPlugin(Star):
             if self._state_file.exists():
                 data = json.loads(self._state_file.read_text(encoding="utf-8"))
                 if isinstance(data, dict):
-                    self.group_targets = list(dict.fromkeys(self.group_targets + self._parse_targets(data.get("group_targets", []), "GroupMessage")))
-                    self.private_targets = list(dict.fromkeys(self.private_targets + self._parse_targets(data.get("private_targets", []), "FriendMessage")))
+                    self.group_targets = list(dict.fromkeys(self.group_targets + self._parse_targets(data.get("group_targets", []), "GroupMessage", self.platform_id)))
+                    self.private_targets = list(dict.fromkeys(self.private_targets + self._parse_targets(data.get("private_targets", []), "FriendMessage", self.platform_id)))
         except Exception as exc: logger.warning("auto_spark: load state failed: %s", exc)
 
     def _event_umo(self, event: AstrMessageEvent) -> str:
