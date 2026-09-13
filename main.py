@@ -12,7 +12,6 @@ except ImportError:
     AstrBotConfig = dict  # type: ignore
 from astrbot.core.platform.message_session import MessageSession
 from astrbot.core.platform.message_type import MessageType
-from astrbot.core.platform.message_type import MessageType
 try:
     from astrbot.api.star import StarTools
 except ImportError:
