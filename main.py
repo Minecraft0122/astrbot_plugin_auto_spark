@@ -30,6 +30,7 @@ class AutoSparkPlugin(Star):
         self.enabled = bool(cfg.get("enabled", True))
         self.admin_only = bool(cfg.get("admin_only", True))
         self.send_on_startup = bool(cfg.get("send_on_startup", False))
+        self.send_times = self._parse_times(cfg.get("send_times", ""))
         if StarTools is not None:
             try:
                 self._state_file = Path(StarTools.get_data_dir("astrbot_plugin_auto_spark")) / "targets.json"
@@ -38,8 +39,21 @@ class AutoSparkPlugin(Star):
         else:
             self._state_file = Path("data/plugin_data/astrbot_plugin_auto_spark/targets.json")
         configured = self._parse_targets(cfg.get("targets", ""))
-        self.scheduler = SparkScheduler(self._send, self.interval, self.message, self.send_on_startup)
+        self.scheduler = SparkScheduler(self._send, self.interval, self.message, self.send_on_startup, self.send_times)
         self._configured_targets = configured
+
+    @staticmethod
+    def _parse_times(raw: Any) -> list[str]:
+        values = raw if isinstance(raw, (list, tuple, set)) else str(raw or "").replace("，", "\n").replace(",", "\n").splitlines()
+        result = []
+        for value in values:
+            try:
+                hour, minute = map(int, str(value).strip().split(":", 1))
+                if 0 <= hour <= 23 and 0 <= minute <= 59:
+                    result.append(f"{hour:02d}:{minute:02d}")
+            except (TypeError, ValueError):
+                continue
+        return sorted(set(result))
 
     @staticmethod
     def _parse_targets(raw: Any) -> list[str]:
@@ -100,15 +114,15 @@ class AutoSparkPlugin(Star):
                     pass
             created = self.scheduler.start(umo)
             self._save_targets()
-            yield event.plain_result(f"续火已{'开启' if created else '在运行'}\n会话：{umo}\n间隔：{self.interval} 秒")
+            yield event.plain_result(f"续火已{'开启' if created else '在运行'}\n会话：{umo}\n" + (f"每天：{', '.join(self.send_times)}" if self.send_times else f"间隔：{self.interval} 秒"))
         elif action in {"关闭", "关", "off", "stop"}:
             stopped = await self.scheduler.stop(umo); self._save_targets()
             yield event.plain_result("续火已关闭" if stopped else "当前会话未开启续火")
         elif action in {"状态", "status", "list", "列表"}:
             state = "运行中" if umo in self.scheduler.targets else "未开启"
-            yield event.plain_result(f"当前会话：{state}\n活动会话数：{len(self.scheduler.targets)}\n间隔：{self.interval} 秒")
+            yield event.plain_result(f"当前会话：{state}\n活动会话数：{len(self.scheduler.targets)}\n" + (f"每天：{', '.join(self.send_times)}" if self.send_times else f"间隔：{self.interval} 秒"))
         else:
-            yield event.plain_result("用法：/续火 开启 [间隔秒]、/续火 关闭、/续火 状态")
+            yield event.plain_result("用法：/续火 开启 [间隔秒]、/续火 关闭、/续火 状态；定时发送请在插件配置中填写 send_times")
 
     async def terminate(self):
         await self.scheduler.stop_all()
