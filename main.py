@@ -20,14 +20,14 @@ except ImportError:  # pragma: no cover
     from scheduler import SparkScheduler
 
 
-@register("auto_spark", "AstrBot", "每天向多个群聊和私聊发送一次续火消息", "2.1.0")
+@register("auto_spark", "AstrBot", "每天向多个群聊和私聊发送一次续火消息", "2.2.0")
 class AutoSparkPlugin(Star):
     def __init__(self, context: Context, config: AstrBotConfig | None = None):
         super().__init__(context)
         cfg = config or {}
         self.message = str(cfg.get("message", "续火啦 🔥"))
         self.enabled = bool(cfg.get("enabled", True))
-        self.platform_id = str(cfg.get("platform_id", "")).strip()
+        self.platform_ids = self._parse_platform_ids(cfg.get("platform_ids", cfg.get("platform_id", "")))
         self.send_time = self._parse_time(cfg.get("send_time", "09:00")) or "09:00"
         self.group_targets = self._parse_targets(cfg.get("group_targets", []), MessageType.GROUP_MESSAGE)
         self.private_targets = self._parse_targets(cfg.get("private_targets", []), MessageType.FRIEND_MESSAGE)
@@ -47,6 +47,11 @@ class AutoSparkPlugin(Star):
             return None
         return f"{hour:02d}:{minute:02d}" if 0 <= hour <= 23 and 0 <= minute <= 59 else None
 
+    @staticmethod
+    def _parse_platform_ids(raw: Any) -> list[str]:
+        values = raw if isinstance(raw, (list, tuple, set)) else str(raw or "").replace("，", "\n").replace(",", "\n").splitlines()
+        return list(dict.fromkeys(str(value).strip() for value in values if str(value).strip()))
+
     def _parse_targets(self, raw: Any, expected_type: MessageType) -> list[str]:
         values = raw if isinstance(raw, (list, tuple, set)) else str(raw or "").replace("，", "\n").replace(",", "\n").splitlines()
         result: list[str] = []
@@ -54,18 +59,29 @@ class AutoSparkPlugin(Star):
             value = str(value).strip()
             if not value:
                 continue
-            umo = value
-            if ":" not in value and self.platform_id:
-                umo = str(MessageSession(self.platform_id, expected_type, value))
-            try:
-                session = MessageSession.from_str(umo)
-                if session.message_type != expected_type:
-                    raise ValueError("wrong message type")
-            except Exception:
-                logger.warning("auto_spark: ignore invalid target %r", umo)
-                continue
-            if umo not in result:
-                result.append(umo)
+            # A bare group/user ID is expanded to every configured bot instance.
+            if ":" not in value:
+                if not self.platform_ids:
+                    logger.warning(
+                        "auto_spark: target %r requires platform_ids; "
+                        "fill platform_ids with one or more bot instance IDs, "
+                        "or use a complete UMO",
+                        value,
+                    )
+                    continue
+                umos = [str(MessageSession(platform_id, expected_type, value)) for platform_id in self.platform_ids]
+            else:
+                umos = [value]
+            for umo in umos:
+                try:
+                    session = MessageSession.from_str(umo)
+                    if session.message_type != expected_type:
+                        raise ValueError("wrong message type")
+                except Exception:
+                    logger.warning("auto_spark: ignore invalid %s target %r", expected_type.value, umo)
+                    continue
+                if umo not in result:
+                    result.append(umo)
         return result
 
     async def initialize(self):

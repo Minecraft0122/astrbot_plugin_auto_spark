@@ -4,25 +4,32 @@
     "type": "bool",
     "default": true
   },
-  "platform_id": {
-    "description": "平台实例 ID",
-    "type": "string",
-    "default": "",
-    "hint": "例如 qq；填写后群聊和私聊列表可直接填写群号或用户 QQ"
+  "platform_ids": {
+    "description": "机器人实例列表",
+    "type": "list",
+    "items": {
+      "type": "string"
+    },
+    "default": [],
+    "hint": "填写一个或多个机器人实例 ID，例如 qq1、qq2；填写后群聊和私聊列表可直接填群号或用户 QQ"
   },
   "group_targets": {
     "description": "群聊列表",
     "type": "list",
-    "items": {"type": "string"},
+    "items": {
+      "type": "string"
+    },
     "default": [],
-    "hint": "填写群号；也支持完整 UMO，例如 qq:GroupMessage:123456"
+    "hint": "填写群号；插件会绑定到每个 platform_ids 机器人，也支持完整 UMO，例如 qq1:GroupMessage:123456"
   },
   "private_targets": {
     "description": "私聊列表",
     "type": "list",
-    "items": {"type": "string"},
+    "items": {
+      "type": "string"
+    },
     "default": [],
-    "hint": "填写用户 QQ；也支持完整 UMO，例如 qq:FriendMessage:987654"
+    "hint": "填写用户 QQ；插件会绑定到每个 platform_ids 机器人，也支持完整 UMO，例如 qq1:FriendMessage:987654"
   },
   "send_time": {
     "description": "每天发送时间",
