@@ -4,37 +4,32 @@
     "type": "bool",
     "default": true
   },
-  "interval_seconds": {
-    "description": "续火间隔（秒）",
-    "type": "int",
-    "default": 3600,
-    "hint": "最小 10 秒"
-  },
   "message": {
     "description": "发送的续火消息",
     "type": "string",
     "default": "续火啦 🔥"
   },
-  "targets": {
-    "description": "续火目标 UMO 列表（群聊和私聊均可）",
+  "group_targets": {
+    "description": "群聊列表",
     "type": "string",
     "default": "",
-    "hint": "每行一个，格式 platform_instance_id:message_type:session_id；群聊和私聊均可"
+    "hint": "每行一个 UMO，例如 qq:GroupMessage:123456"
   },
-  "send_on_startup": {
-    "description": "启动时立即发送",
-    "type": "bool",
-    "default": false
+  "private_targets": {
+    "description": "私聊列表",
+    "type": "string",
+    "default": "",
+    "hint": "每行一个 UMO，例如 qq:FriendMessage:987654"
+  },
+  "send_time": {
+    "description": "每天发送时间",
+    "type": "string",
+    "default": "09:00",
+    "hint": "只填写一个 HH:MM 时间，每天发送一次"
   },
   "admin_only": {
     "description": "仅管理员可使用续火命令",
     "type": "bool",
     "default": true
-  },
-  "send_times": {
-    "description": "每天发送时间",
-    "type": "string",
-    "default": "",
-    "hint": "每行一个 HH:MM，例如 09:00\\n18:30；填写后按每天定时发送，留空则按间隔发送"
   }
 }
