@@ -13,18 +13,14 @@
   "group_targets": {
     "description": "群聊列表",
     "type": "list",
-    "items": {
-      "type": "string"
-    },
+    "items": {"type": "string"},
     "default": [],
     "hint": "填写群号；也支持完整 UMO，例如 qq:GroupMessage:123456"
   },
   "private_targets": {
     "description": "私聊列表",
     "type": "list",
-    "items": {
-      "type": "string"
-    },
+    "items": {"type": "string"},
     "default": [],
     "hint": "填写用户 QQ；也支持完整 UMO，例如 qq:FriendMessage:987654"
   },
@@ -38,10 +34,5 @@
     "description": "发送的续火消息",
     "type": "string",
     "default": "续火啦 🔥"
-  },
-  "admin_only": {
-    "description": "仅管理员可使用续火命令",
-    "type": "bool",
-    "default": true
   }
 }
