@@ -1,0 +1,8 @@
+{
+  "enabled": {"description":"启用自动续火","type":"bool","default":true},
+  "interval_seconds": {"description":"续火间隔（秒）","type":"int","default":3600,"hint":"最小 10 秒"},
+  "message": {"description":"发送的续火消息","type":"string","default":"续火啦 🔥"},
+  "targets": {"description":"启动时自动续火的 UMO 列表","type":"string","default":"","hint":"每行一个，格式 platform_instance_id:message_type:session_id；群聊和私聊均可"},
+  "send_on_startup": {"description":"启动时立即发送","type":"bool","default":false},
+  "admin_only": {"description":"仅管理员可使用续火命令","type":"bool","default":true}
+}
